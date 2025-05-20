@@ -2,6 +2,8 @@ from dotenv import dotenv_values
 from aip import AipSpeech
 from pymodbus.client import ModbusSerialClient
 from pymodbus import ModbusException
+import threading
+from time import sleep
 
 config = dotenv_values()
 
@@ -76,8 +78,16 @@ def write_coil(status: bool) -> bool:
         raise e
 
 
+def monitor() -> None:
+    while True:
+        status: bool = read_coil()
+        print("当前风扇状态:", "打开" if status else "关闭")
+        sleep(5)
+
+
 def main():
     init()
+    threading.Thread(target=monitor).start()
 
 
 if __name__ == "__main__":
