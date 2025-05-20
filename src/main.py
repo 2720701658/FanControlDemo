@@ -27,6 +27,9 @@ def init() -> None:
     初始化Modbus和百度语音识别Client
     """
     try:
+        global modbusClient
+        global speechClient
+
         modbusClient = ModbusSerialClient(
             PORT,
             baudrate=BAUDRATE,
@@ -51,6 +54,26 @@ def init() -> None:
         raise e
     else:
         print("初始化成功!!!")
+
+
+def read_coil() -> bool:
+    try:
+        return bool(modbusClient.read_coils(0, count=1, slave=SLAVE).bits[0])
+    except ModbusException as e:
+        print("模块连接错误,请重新尝试!")
+        raise e
+
+
+def write_coil(status: bool) -> bool:
+    try:
+        cur = read_coil()
+        if cur == status:
+            return False
+        modbusClient.write_coil(0, status, slave=SLAVE)
+        return True
+    except ModbusException as e:
+        print("模块连接错误,请重新尝试!")
+        raise e
 
 
 def main():
