@@ -4,6 +4,7 @@ from pymodbus.client import ModbusSerialClient
 from pymodbus import ModbusException
 import threading
 from time import sleep
+from pynput import keyboard
 
 config = dotenv_values()
 
@@ -47,6 +48,7 @@ def init() -> None:
 
         speechClient = AipSpeech(appId=APP_ID, apiKey=API_KEY, secretKey=SEC_KEY)
         speechClient.setConnectionTimeoutInMillis(5)
+        print("百度语音识别版本:", speechClient.getVersion())
 
     except ModbusException as e:
         print("模块连接失败,请尝试重新连接模块!")
@@ -60,6 +62,8 @@ def init() -> None:
 
 def read_coil() -> bool:
     try:
+        global modbusClient
+
         return bool(modbusClient.read_coils(0, count=1, slave=SLAVE).bits[0])
     except ModbusException as e:
         print("模块连接错误,请重新尝试!")
@@ -68,6 +72,8 @@ def read_coil() -> bool:
 
 def write_coil(status: bool) -> bool:
     try:
+        global modbusClient
+
         cur = read_coil()
         if cur == status:
             return False
@@ -85,9 +91,23 @@ def monitor() -> None:
         sleep(5)
 
 
+def on_press(key) -> None:
+    try:
+        if key.char == "v":
+            print(key.char)
+            # 加入语音识别功能
+    except AttributeError:
+        if key == keyboard.Key.esc:
+            print("正在退出...")
+            modbusClient.close()
+            exit(0)
+
+
 def main():
     init()
-    threading.Thread(target=monitor).start()
+    threading.Thread(target=monitor, daemon=True).start()
+    with keyboard.Listener(on_press=on_press) as listener:
+        listener.join()
 
 
 if __name__ == "__main__":
