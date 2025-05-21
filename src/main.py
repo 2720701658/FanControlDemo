@@ -10,11 +10,11 @@ from pynput import keyboard
 from pynput.keyboard import Key, KeyCode
 import pyaudio
 import wave
-import urllib3
+from urllib3.exceptions import HTTPError
 
 config = dotenv_values()
 
-# 读取modbus连接环境变量
+# 读取485串口配置
 PORT: str = config["PORT"]
 BAUDRATE: int = int(config["BAUDRATE"])
 BYTESIZE: int = int(config["BYTESIZE"])
@@ -22,7 +22,7 @@ PARITY: str = config["PARITY"]
 STOPBITS: int = int(config["STOPBITS"])
 SLAVE: int = int(config["SLAVE"])
 
-# 读取百度语音识别环境变量
+# 读取百度语音识别配置
 APP_ID: str = config["APP_ID"]
 API_KEY: str = config["API_KEY"]
 SEC_KEY: str = config["SEC_KEY"]
@@ -167,13 +167,13 @@ def on_press(key: Key | KeyCode) -> None:
             write_coil(False)
             modbusClient.close()
             os._exit(0)
-    except (urllib3.exceptions.HTTPError, KeyError) as e:
+    except (HTTPError, KeyError) as e:
         print(e)
 
 
 def main() -> None:
     """
-    主函数
+    主函数,调用初始化函数以及创建两个thread分别打印风扇状态和监听键盘事件
     """
     init()
     threading.Thread(target=monitor, daemon=True).start()
