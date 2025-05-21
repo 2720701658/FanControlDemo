@@ -112,7 +112,7 @@ def monitor() -> None:
 def record(duration: int) -> None:
     """
     录音并保存为output.wav文件
-    :param duration: 录音持续的时间
+    :param: duration: 录音持续的时间
     """
     try:
         with wave.open("output.wav", "wb") as w:
@@ -120,7 +120,7 @@ def record(duration: int) -> None:
             # 设置帧数率为16000(固定值), 通道数为1, 精度为16位整型
             w.setframerate(16000)
             w.setnchannels(1)
-            w.setsampwidth(p.get_sample_size(pyaudio.paInt32))
+            w.setsampwidth(p.get_sample_size(pyaudio.paInt16))
             stream = p.open(rate=16000, channels=1, format=pyaudio.paInt16, input=True)
             print("录音中...")
             for i in range(0, 16000 // 1024 * duration):
@@ -134,6 +134,10 @@ def record(duration: int) -> None:
 
 
 def upload() -> str:
+    """
+    上传录音文件获取语音内容
+    :return: speech: 语音内容字符串
+    """
     try:
         with open("output.wav", "rb") as file:
             global speechClient
@@ -141,7 +145,7 @@ def upload() -> str:
             res: dict[str, str] = speechClient.asr(file.read(), "wav", 16000)
             speech: str = res["result"][0]
             return speech
-    except (urllib3.exceptions.HTTPError, KeyError) as e:
+    except (HTTPError, KeyError) as e:
         print("语音解析错误!")
         raise e
 
@@ -149,7 +153,7 @@ def upload() -> str:
 def on_press(key: Key | KeyCode) -> None:
     """
     监听键盘按下事件,按下V键时进行语音输入,按下Esc键退出程序
-    :param key: 检测到按下的键
+    :param: key: 检测到按下的键
     """
     try:
         if key.char == "v":
